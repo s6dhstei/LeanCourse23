@@ -67,11 +67,6 @@ example (f g : ℝ → ℝ) (hf : NonDecreasing f) (hg : NonDecreasing g) :
 
 
 
-
-
-
-
-
 /- ## If and only if
 We already saw last time:
 * You can use `constructor` to prove an "if and only if" statement
@@ -82,7 +77,15 @@ We already saw last time:
   - `rw [← h]`
 -/
 
-example (x : ℝ) : 0 ≤ x ^ 3 ↔ 0 ≤ x ^ 5 := by sorry
+example (x : ℝ) : 0 ≤ x ^ 3 ↔ 0 ≤ x ^ 5 := by {
+  have h₁ : 0 ≤ x ^ 3 ↔ 0 ≤ x := by
+    apply Odd.pow_nonneg_iff
+    norm_num
+  have h₂ : 0 ≤ x ^ 5 ↔ 0 ≤ x := by
+    apply Odd.pow_nonneg_iff
+    norm_num
+  rw[h₁, h₂]
+}
 
 
 

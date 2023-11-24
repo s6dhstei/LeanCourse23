@@ -33,5 +33,10 @@
     "files.trimTrailingWhitespace": true,
     "files.trimFinalNewlines": true,
     "lean4.infoview.emphasizeFirstGoal": true,
-    "lean4.infoview.showExpectedType": false
+    "lean4.infoview.showExpectedType": false,
+    "python.testing.pytestArgs": [
+        "LeanCourse"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true
 }

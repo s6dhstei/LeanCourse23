@@ -191,4 +191,23 @@ lemma exercise4_5 (n : ℕ) (hn : Nat.Prime (2 ^ n - 1)) : Nat.Prime n := by
 /- Here is another exercise about numbers. Make sure you find a simple proof on paper first.
 -/
 lemma exercise4_6 (a b : ℕ) (ha : 0 < a) (hb : 0 < b) :
-    ¬ IsSquare (a ^ 2 + b) ∨ ¬ IsSquare (b ^ 2 + a) := by sorry
+    ¬ IsSquare (a ^ 2 + b) ∨ ¬ IsSquare (b ^ 2 + a) := by {
+      rw[←not_and_or]
+      rw[IsSquare]
+      intro ⟨h₁, h₂⟩
+      obtain ⟨c, hc⟩ := h₁
+      have e1 : b = c * c - a ^ 2 := by apply?
+      have e2 : c ^ 2 - a ^ 2 = (c + a) * (c - a) := by apply?
+      have g : c - a ≥ 1 := by sorry
+      have f : 2 * b + 1 > a := by {
+        calc 2 * b + 1
+        = 2 * (c + a) * (c - a) + 1 := by apply?
+      _ ≥ 2 * (c + a) + 1 := by {apply?}
+      _ > 2 * (c + a) := by _?
+      _ = 2 * c + 2 * a := by _?
+      _ ≥ 2 * a := by _?
+      _ ≥ a := by _?
+      }
+
+    }
+example  (p q : Prop) : ¬(p ∧ q) ↔ ¬p ∨ ¬q := by exact not_and_or

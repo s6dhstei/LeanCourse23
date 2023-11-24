@@ -165,8 +165,19 @@ once! -/
 example {X Y Z : Type*} {F : Filter X} {G : Filter Y} {H : Filter Z}
     {f : X → Y} {g : Y → Z}
     (hf : Tendsto f F G) (hg : Tendsto g G H) :
-    Tendsto (g ∘ f) F H := by
-  sorry /- # Exercise -/
+    Tendsto (g ∘ f) F H := by{
+  intro S hS
+  simp
+  rw [@preimage_comp]
+  apply hf
+  apply hg
+  exact hS
+}
+
+
+
+/- # Exercise -/
+
 
 /-
 Filters also allow us to reason about things that are
@@ -391,18 +402,24 @@ If you know category theory, this is an *adjunction* between orders
 -/
 @[simps]
 def cl (U : RegularOpens X) : Closeds X :=
-  ⟨closure U, sorry⟩
+  ⟨closure U, isClosed_closure⟩
 
 /- The interior of a closed set. You will have to prove yourself that it is regular open. -/
 @[simps]
 def _root_.TopologicalSpace.Closeds.int (C : Closeds X) : RegularOpens X :=
-  ⟨interior C, sorry, sorry⟩
+  ⟨interior C, isOpen_interior, by{
+    rw[interior]
+    sorry
+   }⟩
 
 /- Now let's show the relation between these two operations. -/
 lemma cl_le_iff {U : RegularOpens X} {C : Closeds X} :
     U.cl ≤ C ↔ U ≤ C.int := by sorry
 
-@[simp] lemma cl_int : U.cl.int = U := by sorry
+@[simp] lemma cl_int : U.cl.int = U := by {
+  rw[cl]
+  sorry
+}
 
 /- This gives us a GaloisCoinsertion. -/
 
