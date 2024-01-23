@@ -153,7 +153,7 @@ def hom_by_faces {S : SSet} [Quasicategory S] {n : ℕ} {i : Fin (n+1)} (σ : Fi
 if there exists σ : S₂ such that d₀σ=f, d₁σ = g and d₂σ = s₀d₁f
 -/
 
-def left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
+def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
   exact (S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g ∧ ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
 }
 -- hmm I would like a definition where we have same_start, same_end and exists_filler as three lines (where (same_start : (S.δ 1) f = (S.δ 1) g) (same_end : (S.δ 0) f = (S.δ 0) g))
@@ -161,12 +161,12 @@ def left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
 structure htpy {S : SSet} [Quasicategory S] (f g : S _[1]) where
   same_start : (S.δ 1) f = (S.δ 1) g
   same_end : (S.δ 0) f = (S.δ 0) g
-  left_filler : ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
-  right_filler :  ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
+  right_filler : ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
+  left_filler :  ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 
 #check htpy.same_start
 
-def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
+def left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
   exact (S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g ∧ ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 }
 
@@ -175,16 +175,30 @@ def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
 
 
 -- left_homotopic and right_homotopic are equivalent
+
+def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S _[2])
+  | 0 => σ₀
+  | 1 => σ₁
+  | 2 => σ₂
+  | 3 => σ₃
+-- "don't know how to synthesize placeholder" problem below:
+-- this is the most brute force way to define the function `s`, but it still doesn't work! why?
+
 lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g ↔ right_homotopic f g := by{
   constructor
   · intro hleft
+    rw[left_homotopic] at hleft
+    obtain ⟨σ, hσ⟩ := hleft.2.2
     constructor
     · exact hleft.1
     · constructor
       · exact (hleft.2).1
-      · have f : Λ[3,1] ⟶ S := by{
-        sorry
-        }
+      · let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
+--        have a : Λ[3,1] ⟶ S := hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) _
+--        obtain ⟨b, hb⟩ := Quasicategory.hornFilling _ _ a
+--        have temp1 : 0 ≤ 2 := by exact Nat.zero_le 2
+--        have temp2 : 2 ≤ 3 := by exact Nat.AtLeastTwo.prop
+--        use (b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp1) (temp2)))
         sorry
   · intro hright
     constructor
@@ -193,6 +207,11 @@ lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _
       · exact (hright.2).1
       · sorry
 }
+example : (0 : Fin 4) ≤ 2 := by exact Nat.zero_le 2
+
+
+
+
 #check horn.hom_ext
 -- for this proof, I need to find out how to explicitly define a map Λ _[k i] → S
 -- oh maybe by horn.ext which doesn't work in this file
@@ -210,12 +229,4 @@ The next steps are:
 - Composition is associative up to homotopy: For three morphisms f : x → y, g : y → z, h : z → w, there exists a homotopy h ◦ (g ◦ f ) ∼ (h ◦ g) ◦ f .
 - Identity maps: there are equivalences f ∼ f ◦ idx ∼ idy ◦ f where idx = S.σ 0 (S.δ 1 f)
 - most challenging part up to here: define the Homotopy Category of a Quasicategory S
--/
-
-
-
-
-/- TO DO:
-- clean this document, in particular the comments and #check
-- add helpful comments
 -/
