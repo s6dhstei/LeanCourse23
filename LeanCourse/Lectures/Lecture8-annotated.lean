@@ -360,7 +360,7 @@ instance : AbelianGroup' ℤ where
   zero := 0
   add_zero := by simp
   neg := fun a ↦ -a
-  add_neg := by exact?
+  add_neg := by exact fun x ↦ Int.add_right_neg x
 
 #eval AbelianGroup'.add (2 : ℤ) 5
 #check AbelianGroup'.zero

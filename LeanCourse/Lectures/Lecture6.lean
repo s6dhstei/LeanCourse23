@@ -187,7 +187,7 @@ example (f : α → β) : f '' univ = range f := image_univ
 
 open Pointwise
 
-example (s t : Set ℝ) : s + t = {x : ℝ | ∃ a b, a ∈ s ∧ b ∈ t ∧ a + b = x } := by rfl
+example (s t : Set ℝ) : s + t = {x : ℝ | ∃ a b, a ∈ s ∧ b ∈ t ∧ a + b = x } := by apply?
 example (s t : Set ℝ) : -s = {x : ℝ | -x ∈ s } := by rfl
 
 example : ({1, 3, 5} : Set ℝ) + {0, 10} = {1, 3, 5, 11, 13, 15} := by

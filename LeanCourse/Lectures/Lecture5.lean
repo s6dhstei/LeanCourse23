@@ -250,7 +250,7 @@ example : s ∩ t ⊆ s ∩ (t ∪ u) := by
   · left
     exact hx.2
 
-/- you can also prove it at thge level of sets, without talking about elements. -/
+/- you can also prove it at the level of sets, without talking about elements. -/
 example : s ∩ t ⊆ s ∩ (t ∪ u) := by
   gcongr
   exact subset_union_left t u

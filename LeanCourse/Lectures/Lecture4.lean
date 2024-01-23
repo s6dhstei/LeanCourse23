@@ -48,7 +48,7 @@ example (f g : ℝ → ℝ) (hg : NonDecreasing g) (hf : NonDecreasing f) :
   --   exact hx₁x₂
   specialize hf x₁ x₂ hx₁x₂
   specialize hg (f x₁) (f x₂) hf
-  rw [Function.comp, Function.comp]
+  rw [@comp_apply]
   exact hg
 }
 
@@ -85,9 +85,10 @@ example (x : ℝ) : 0 ≤ x ^ 3 ↔ 0 ≤ x ^ 5 := by {
   have h1 : 0 ≤ x ^ 3 ↔ 0 ≤ x := by
     apply Odd.pow_nonneg_iff
     simp
+    exact Nat.not_even_iff.mpr rfl
   have h2 : 0 ≤ x ^ 5 ↔ 0 ≤ x := by
     apply Odd.pow_nonneg_iff
-    simp
+    exact Nat.odd_iff.mpr rfl
   -- constructor
   -- · intro h3
   --   apply h2.2
