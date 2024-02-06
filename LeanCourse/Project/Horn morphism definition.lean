@@ -11,24 +11,44 @@ open Opposite
 
 
 noncomputable section
--- (only because of the "well-founded"- why is it such an issue? should I try to avoid noncomputable?)
 
+-- here we define a morphism from the nth standard simplex to a simplicial set S by giving its image on the "interior" element in Δ[n] _n
+
+def hom_by_interior {S : SSet} {n : ℕ} {a : 0 < n} (σ : S _[n]) : Δ[n] ⟶ S where
+  app m := by{
+    intro f
+--    let g := f.toOrderHom
+--    let g2 : Fin (n + 1) →o Fin (n + 1) := by exact OrderHom.id
+--    let h := SimplexCategory.mkHom g2
+--    let interior : Δ[n] _[n] := SimplexCategory.mkHom OrderHom.id
+    use S.map (SimplexCategory.mkHom f.toOrderHom).op (σ)
+  }
+  naturality := by{
+--    have y := yoneda
+    intro k m f
+    have lk := len (unop k)
+    simp
+    refine (types_ext ((fun f ↦ S.map f.op σ) ≫ S.map f) (Δ[n].map f ≫ fun f ↦ S.map f.op σ) ?h).symm
+    intro b
+    simp
+    sorry
+  }
 
 -- we can define a morphism from a horn by just giving the image on suitable faces
 -- in the following definition, the compatibility condition is still missing `(compatible : S.map (δ 2 2) (σ 3) = S.map (δ 2 2) (σ 2) etc.)` because of type mismatches that I don't understand
 -- this condition will be necessary to prove naturality
 
-def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,1] ⟶ S where
+def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)): Λ[3,1] ⟶ S where
   app m := by{
     intro f
     have h : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j) := by{
       simpa [← Set.univ_subset_iff, Set.subset_def, asOrderHom, not_or] using f.2
     }
     let h₁ : Set.Nonempty {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by exact h
-    let h₂ : Set.IsWF {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by sorry -- Fin (4) is well-founded! But apparently it is not a Set
-    let j := Set.IsWF.min h₂ h₁
-    have hj : ¬j = 1 := sorry
-    have hji : ∀ k, f.1.toOrderHom k ≠ j := sorry
+--    let h₂ : Set.IsWF {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by sorry -- Fin (4) is well-founded! But apparently it is not a Set
+    let j := Classical.choose h
+    have hj : ¬j = 1 := (Classical.choose_spec h).1
+    have hji : ∀ k, f.1.toOrderHom k ≠ j := (Classical.choose_spec h).2
     let f₁ := f.1
     have H : f = (Λ[2+1, 1].map (factor_δ (SimplexCategory.mkHom f.1.toOrderHom) j).op) (horn.face 1 j hj) := by
       apply Subtype.ext

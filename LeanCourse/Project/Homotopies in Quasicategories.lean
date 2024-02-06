@@ -33,6 +33,7 @@ variable (f g : S _[1])
 
 /-
 some horn calculations
+(I don't need the following, might delete it)
 -/
 open SimplexCategory
 
@@ -153,23 +154,19 @@ def hom_by_faces {S : SSet} [Quasicategory S] {n : ℕ} {i : Fin (n+1)} (σ : Fi
 if there exists σ : S₂ such that d₀σ=f, d₁σ = g and d₂σ = s₀d₁f
 -/
 
-def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
-  exact (S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g ∧ ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
-}
--- hmm I would like a definition where we have same_start, same_end and exists_filler as three lines (where (same_start : (S.δ 1) f = (S.δ 1) g) (same_end : (S.δ 0) f = (S.δ 0) g))
--- but the following  is not convenient to use
 structure htpy {S : SSet} [Quasicategory S] (f g : S _[1]) where
   same_start : (S.δ 1) f = (S.δ 1) g
   same_end : (S.δ 0) f = (S.δ 0) g
   right_filler : ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
   left_filler :  ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 
-#check htpy.same_start
 
 def left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
-  exact (S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g ∧ ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
+  exact ((S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g) ∧ ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 }
-
+def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
+  exact ((S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g) ∧ ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 0 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
+}
 
 
 
@@ -181,35 +178,88 @@ def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S 
   | 1 => σ₁
   | 2 => σ₂
   | 3 => σ₃
--- "don't know how to synthesize placeholder" problem below:
--- this is the most brute force way to define the function `s`, but it still doesn't work! why?
+-- "don't know how to synthesize placeholder" problem below: where did it come from? (never mind)
 
-lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g ↔ right_homotopic f g := by{
+lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
+lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
+
+lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategoryᵒᵖ⦄ (f : X ⟶ Y)  (a : Δ[n] ⟶ S) (x : Δ[n].obj X) : S.map f (a.app X x) = a.app Y (Δ[n].map f x) := by exact
+  (FunctorToTypes.naturality Δ[n] S a f x).symm
+
+-- I forgot how to rewrite when there is no equality lemma, so I'm making equality lemmata
+lemma delta_is {S : SSet} {n} (i : Fin (n + 2)) : (SimplicialObject.δ S i : S _[n + 1] ⟶ S _[n]) = S.map (SimplexCategory.δ i).op := rfl
+
+
+
+-- left homotopic to right homotopic
+
+lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g → right_homotopic f g := by{
+  intro hleft
+  rw[left_homotopic] at hleft
+  obtain ⟨σ, hσ⟩ := hleft.2
+  obtain ⟨hleft1, hleft2, hleft3⟩ := hσ
   constructor
-  · intro hleft
-    rw[left_homotopic] at hleft
-    obtain ⟨σ, hσ⟩ := hleft.2.2
+  · exact hleft.1
+  · let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
+    let a : Λ[3,1] ⟶ S := by {
+    use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).app m)
+    apply (hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).naturality}
+    have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 0 f := by sorry
+
+--    have temp3 : @LT.lt (Fin (3 + 1)) instLTFin 0 1 := by exact Fin.one_pos
+    have temp13l : @LT.lt (Fin (3 + 1)) instLTFin 1 (Fin.last 3) := by exact Fin.lt_last_iff_coe_castPred.mpr rfl
+    obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (temp13l) a
+--    have temp02 : 0 ≤ 2 := by exact Nat.zero_le 2
+    let B := b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp02) (temp23))
+    use B
+    have B_is : B = b.app (op [2]) (standardSimplex.triangle 0 2 3 temp02 (_ : OfNat.ofNat 2 ≤ 3)) := rfl
     constructor
-    · exact hleft.1
+    ·
+--      have temp5 : SimplicialObject.δ S 0 B = SimplicialObject.δ S 0 (b.app (op [2]) (standardSimplex.triangle 1 2 3 (temp12) (temp23))) := by sorry
+      have temp71 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+      have temp72 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+      have temp8 : SimplicialObject.δ S 0 (b.app (op [2]) (standardSimplex.triangle 1 2 3 (temp12) (temp23))) = b.app (op [1]) (SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23))) := by{
+        exact (FunctorToTypes.naturality Δ[2 + 1] S b (δ 0).op (standardSimplex.triangle 1 2 3 temp12 temp23)).symm
+        -- standard_simplex_naturality (δ 0).op b
+        }
+      have temp9 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
+        rw[temp72.symm]
+        rw[B_is]
+        rw[delta_is, delta_is]
+        exact standard_simplex_naturality (δ 0).op b (standardSimplex.triangle 0 2 3 temp02 temp23)
+      }
+      rw[temp9]
+      have temp_incl : (standardSimplex.edge 3 2 3 (temp23)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by exact temp71
+      have temp_comp : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by sorry
+      have temp6 : b.app (op [1]) (standardSimplex.edge 3 2 3 (_ : OfNat.ofNat 2 ≤ 3)) = a.app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by {
+        rw[temp_incl]
+        exact temp_comp (horn.edge 3 1 2 3 temp23 Finset.card_le_three)
+      }
+      rw[temp6]
+      have temp31 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by sorry
+      have temp3 : a.app (op [1]) (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)) = SimplicialObject.δ S 0 (a.app (op [2]) (horn.face 1 0 neq01)) := by{
+        rw[temp31]
+        apply (FunctorToTypes.naturality Λ[3,1] S a (δ 0).op (horn.face 1 0 neq01))
+      }
+      rw[temp3]
+      rw[temp_a0]
+      -- now this should really just be a simplicial identity
+      sorry
     · constructor
-      · exact (hleft.2).1
-      · let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
---        have a : Λ[3,1] ⟶ S := hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) _
---        obtain ⟨b, hb⟩ := Quasicategory.hornFilling _ _ a
---        have temp1 : 0 ≤ 2 := by exact Nat.zero_le 2
---        have temp2 : 2 ≤ 3 := by exact Nat.AtLeastTwo.prop
---        use (b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp1) (temp2)))
-        sorry
-  · intro hright
-    constructor
-    · exact hright.1
-    · constructor
-      · exact (hright.2).1
+      · sorry
       · sorry
 }
-example : (0 : Fin 4) ≤ 2 := by exact Nat.zero_le 2
 
+-- the other direction
+lemma left_homotopic_of_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g → left_homotopic f g := sorry
 
+lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g ↔ left_homotopic f g := by {
+  constructor
+  · exact fun a ↦ left_homotopic_of_right_homotopic f g a
+  · exact fun a ↦ left_homotopic_to_right_homotopic f g a
+}
 
 
 #check horn.hom_ext
