@@ -97,6 +97,14 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
 -- remark: WHY IS IT SO HARD FOR LEAN TO MATCH APPLICATION TYPES WHEN THEY ARE LITERALLY DEFINED TO BE THE SAME
 -- for example it expects something of type SimplexCategoryᵒᵖ but the argument is ℕᵒᵖ - The definition of SimplexCategory is ℕ, nothing more
 
+lemma hom_by_faces_13_works_fine {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : 1 = 1 := by{
+  let a : Λ[3,1] ⟶ S := by {
+    use fun m ↦ ((hom_by_faces_1th_3horn σ).app m)
+    apply (hom_by_faces_1th_3horn σ).naturality}
+  --have h : a.app (op [2]) (horn.face 1 0 _) = SimplicialObject.σ S 0 _ := by sorry
+  rfl
+}
+
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
   app m := by{
     intro f
@@ -207,22 +215,16 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
     use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).app m)
     apply (hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).naturality}
     have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 0 f := by sorry
-
---    have temp3 : @LT.lt (Fin (3 + 1)) instLTFin 0 1 := by exact Fin.one_pos
     have temp13l : @LT.lt (Fin (3 + 1)) instLTFin 1 (Fin.last 3) := by exact Fin.lt_last_iff_coe_castPred.mpr rfl
     obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (temp13l) a
---    have temp02 : 0 ≤ 2 := by exact Nat.zero_le 2
     let B := b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp02) (temp23))
     use B
     have B_is : B = b.app (op [2]) (standardSimplex.triangle 0 2 3 temp02 (_ : OfNat.ofNat 2 ≤ 3)) := rfl
     constructor
-    ·
---      have temp5 : SimplicialObject.δ S 0 B = SimplicialObject.δ S 0 (b.app (op [2]) (standardSimplex.triangle 1 2 3 (temp12) (temp23))) := by sorry
-      have temp71 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+    · have temp71 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
       have temp72 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
       have temp8 : SimplicialObject.δ S 0 (b.app (op [2]) (standardSimplex.triangle 1 2 3 (temp12) (temp23))) = b.app (op [1]) (SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23))) := by{
         exact (FunctorToTypes.naturality Δ[2 + 1] S b (δ 0).op (standardSimplex.triangle 1 2 3 temp12 temp23)).symm
-        -- standard_simplex_naturality (δ 0).op b
         }
       have temp9 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
         rw[temp72.symm]

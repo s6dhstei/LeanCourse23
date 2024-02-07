@@ -14,24 +14,21 @@ noncomputable section
 
 -- here we define a morphism from the nth standard simplex to a simplicial set S by giving its image on the "interior" element in Δ[n] _n
 
-def hom_by_interior {S : SSet} {n : ℕ} {a : 0 < n} (σ : S _[n]) : Δ[n] ⟶ S where
+def hom_by_interior {S : SSet} {n : ℕ} (σ : S _[n]) : Δ[n] ⟶ S where
   app m := by{
     intro f
---    let g := f.toOrderHom
---    let g2 : Fin (n + 1) →o Fin (n + 1) := by exact OrderHom.id
---    let h := SimplexCategory.mkHom g2
---    let interior : Δ[n] _[n] := SimplexCategory.mkHom OrderHom.id
     use S.map (SimplexCategory.mkHom f.toOrderHom).op (σ)
   }
   naturality := by{
---    have y := yoneda
     intro k m f
-    have lk := len (unop k)
     simp
     refine (types_ext ((fun f ↦ S.map f.op σ) ≫ S.map f) (Δ[n].map f ≫ fun f ↦ S.map f.op σ) ?h).symm
     intro b
     simp
-    sorry
+    rw [← @FunctorToTypes.map_comp_apply]
+    simp
+    rw[(FunctorToTypes.map_comp_apply S b.op f σ).symm]
+    exact rfl
   }
 
 -- we can define a morphism from a horn by just giving the image on suitable faces
@@ -59,6 +56,7 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
     intro l m f
     sorry
   }
+
 
 
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
