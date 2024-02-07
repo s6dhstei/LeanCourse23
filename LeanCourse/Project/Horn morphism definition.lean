@@ -32,8 +32,7 @@ def hom_by_interior {S : SSet} {n : ℕ} (σ : S _[n]) : Δ[n] ⟶ S where
   }
 
 -- we can define a morphism from a horn by just giving the image on suitable faces
--- in the following definition, the compatibility condition is still missing `(compatible : S.map (δ 2 2) (σ 3) = S.map (δ 2 2) (σ 2) etc.)` because of type mismatches that I don't understand
--- this condition will be necessary to prove naturality
+
 
 def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)): Λ[3,1] ⟶ S where
   app m := by{
@@ -54,10 +53,13 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
   }
   naturality := by{
     intro l m f
+    simp
     sorry
+--    refine types_ext ((fun f ↦ S.map (factor_δ (SimplexCategory.mkHom f.1.toOrderHom) j).op (σ j)) ≫ S.map f)
   }
 
-
+-- in the following definition, the compatibility condition is still missing `(compatible : S.map (δ 2 2) (σ 3) = S.map (δ 2 2) (σ 2) etc.)` because of type mismatches that I don't understand
+-- this condition will be necessary to prove naturality
 
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
   app m := by{

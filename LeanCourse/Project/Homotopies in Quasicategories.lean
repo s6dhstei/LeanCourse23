@@ -31,39 +31,18 @@ variable (f g : S _[1])
 -- for some reason the definition from SimplicialObject, l.87 doesn't work well, so I introduce new notations for the face and degeneracy maps
 
 
-/-
-some horn calculations
-(I don't need the following, might delete it)
--/
-open SimplexCategory
 
-def const (n : ℕ) {p : 0 < n} (j k : Fin (n+1)) (m : SimplexCategoryᵒᵖ) : Λ[n,j].obj m := by{
-  let a : Δ[n].obj m := Hom.mk <| OrderHom.const _ k
-  have h : Set.range (asOrderHom a) ∪ {j} ≠ Set.univ := by {
-    have h₁ : ∀ z ∈ Set.range ⇑(asOrderHom a), z = k := by
-      simp only [len_mk, Set.mem_range, forall_exists_index, forall_apply_eq_imp_iff]
-      intro b
-      rfl
-    have h₂ : Set.range ⇑(asOrderHom a) = {k} := by
-      apply Set.Subset.antisymm h₁ ?h₂
-      apply Set.singleton_subset_iff.mpr ?h₂.a
-      apply Set.mem_range.mpr ?h₂.a.a
-      use 0
-      rfl
-    have h₃ : Set.range ⇑(asOrderHom a) ∪ {j}= {k} ∪ {j} := congrFun (congrArg Union.union h₂) {j}
-    have h₄ : Set.range (asOrderHom a) ∪ {j} < Set.univ := by
-      refine LT.lt.ssubset ?_
-      simp only [len_mk, Set.union_singleton, Set.lt_eq_ssubset]
-      -- so in Set.range (asOrderHom a) ∪ {j} there are at most 2 elements but Fin(n+1)=Set.univ has at least 3
-      -- I don't know how cardinality of a finite set is called in Lean and I don't want to deal with it
-      -- (there is card for Finset)
-      sorry
-    exact Set.ssubset_univ_iff.mp h₄
-  }
-  use a
+-- some lemmata and constructions that I shouldn't need
+def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S _[2])
+  | 0 => σ₀
+  | 1 => σ₁
+  | 2 => σ₂
+  | 3 => σ₃
 
-}
-
+lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
+lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
 
 #check asOrderHom
 
@@ -73,17 +52,18 @@ noncomputable section
 
 -- we can define a morphism from a horn by just giving the image on suitable faces
 
+
 def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,1] ⟶ S where
   app m := by{
     intro f
+    have f2 := f.2
     have h : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j) := by{
       simpa [← Set.univ_subset_iff, Set.subset_def, asOrderHom, not_or] using f.2
     }
     let h₁ : Set.Nonempty {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by exact h
-    let h₂ : Set.IsWF {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by sorry -- Fin (4) is well-founded! But apparently it is not a Set
-    let j := Set.IsWF.min h₂ h₁
-    have hj : ¬j = 1 := sorry
-    have hji : ∀ k, f.1.toOrderHom k ≠ j := sorry
+    let j := Classical.choose h
+    have hj : ¬j = 1 := (Classical.choose_spec h).1
+    have hji : ∀ k, f.1.toOrderHom k ≠ j := (Classical.choose_spec h).2
     let f₁ := f.1
     have H : f = (Λ[2+1, 1].map (factor_δ (SimplexCategory.mkHom f.1.toOrderHom) j).op) (horn.face 1 j hj) := by
       apply Subtype.ext
@@ -92,17 +72,45 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
   }
   naturality := by{
     intro l m f
+    simp
     sorry
   }
--- remark: WHY IS IT SO HARD FOR LEAN TO MATCH APPLICATION TYPES WHEN THEY ARE LITERALLY DEFINED TO BE THE SAME
--- for example it expects something of type SimplexCategoryᵒᵖ but the argument is ℕᵒᵖ - The definition of SimplexCategory is ℕ, nothing more
 
-lemma hom_by_faces_13_works_fine {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : 1 = 1 := by{
-  let a : Λ[3,1] ⟶ S := by {
-    use fun m ↦ ((hom_by_faces_1th_3horn σ).app m)
-    apply (hom_by_faces_1th_3horn σ).naturality}
-  --have h : a.app (op [2]) (horn.face 1 0 _) = SimplicialObject.σ S 0 _ := by sorry
-  rfl
+lemma hom_by_faces_13_works_fine {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : (hom_by_faces_1th_3horn σ).app (op [2]) (horn.face 1 0 neq01) = σ 0 := by{
+--  let a : Λ[3,1] ⟶ S := by {
+--    use fun m ↦ ((hom_by_faces_1th_3horn σ).app m)
+--    apply (hom_by_faces_1th_3horn σ).naturality}
+--  have h : a.app (op [2]) (horn.face 1 0 _) = SimplicialObject.σ S 0 _ := by sorry
+--  have e1 : Set.range ⇑(asOrderHom ((hornInclusion _ _).app (horn.face 1 0 neq01))) ∪ {1} ≠ Set.univ := sorry
+  have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
+    use 0
+    constructor
+    · exact neq01
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+    --exact fun k ↦ (fun {α} [BEq α] [LawfulBEq α] a b ↦ (bne_iff_ne a b).mp) ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0
+--    simpa [← Set.univ_subset_iff, Set.subset_def, asOrderHom, not_or] using (horn.face 1 0 neq01).2
+  }
+--  let h₁ : Set.Nonempty {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by exact h
+  let j := Classical.choose e
+  have j0 : j = 0 := by sorry
+  have e2 : (¬0 = 1 ∧ ∀ (k : Fin (len (SimplexCategory.mk 2))), (horn.face 1 0 neq01).1.toOrderHom k ≠ 0) := by{
+    constructor
+    · exact Nat.zero_ne_one
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+  }
+  have h : (hom_by_faces_1th_3horn σ).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
+    exact rfl
+  }
+  rw[h]
+  rw[j0]
+  simp
+  have hid : (factor_δ (δ 0) 0).op = op (SimplexCategory.Hom.id [2]) := by sorry -- something hom_ext?
+  rw[hid]
+  have h2id : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]) := by sorry -- should be possible to find
+  rw[h2id]
+  exact rfl
 }
 
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
@@ -181,17 +189,7 @@ def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
 
 -- left_homotopic and right_homotopic are equivalent
 
-def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S _[2])
-  | 0 => σ₀
-  | 1 => σ₁
-  | 2 => σ₂
-  | 3 => σ₃
--- "don't know how to synthesize placeholder" problem below: where did it come from? (never mind)
 
-lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
-lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
-lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
-lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
 
 lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategoryᵒᵖ⦄ (f : X ⟶ Y)  (a : Δ[n] ⟶ S) (x : Δ[n].obj X) : S.map f (a.app X x) = a.app Y (Δ[n].map f x) := by exact
   (FunctorToTypes.naturality Δ[n] S a f x).symm
