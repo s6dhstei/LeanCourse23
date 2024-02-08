@@ -1,6 +1,7 @@
 import LeanCourse.Common
 import Mathlib.AlgebraicTopology.SimplicialSet
 import Mathlib.AlgebraicTopology.Quasicategory
+import LeanCourse.Project.HornMorphisms
 
 
 
@@ -12,6 +13,8 @@ open Opposite
 
 
 #check Quasicategory
+#check hom_by_faces_1th_3horn
+
 
 /-
 1. We introduce some basic notions for the lower dimensions of a quasi-category:
@@ -28,7 +31,6 @@ variable (f g : S _[1])
 #check δ
 
 #check S.map (SimplexCategory.δ 0).op
--- for some reason the definition from SimplicialObject, l.87 doesn't work well, so I introduce new notations for the face and degeneracy maps
 
 
 
@@ -47,13 +49,14 @@ lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
 #check asOrderHom
 
 noncomputable section
+set_option maxHeartbeats 2000000
 -- (only because of the "well-founded"- why is it such an issue? should I try to avoid noncomputable?)
 
 
 -- we can define a morphism from a horn by just giving the image on suitable faces
 
-
-def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,1] ⟶ S where
+/-
+def hom_by_faces_1th_3horn_old {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,1] ⟶ S where
   app m := by{
     intro f
     have f2 := f.2
@@ -75,32 +78,27 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
     simp
     sorry
   }
+-/
 
-lemma hom_by_faces_13_works_fine {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : (hom_by_faces_1th_3horn σ).app (op [2]) (horn.face 1 0 neq01) = σ 0 := by{
---  let a : Λ[3,1] ⟶ S := by {
---    use fun m ↦ ((hom_by_faces_1th_3horn σ).app m)
---    apply (hom_by_faces_1th_3horn σ).naturality}
---  have h : a.app (op [2]) (horn.face 1 0 _) = SimplicialObject.σ S 0 _ := by sorry
---  have e1 : Set.range ⇑(asOrderHom ((hornInclusion _ _).app (horn.face 1 0 neq01))) ∪ {1} ≠ Set.univ := sorry
+
+
+lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 0 neq01) = σ 0 := by{
   have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
     use 0
     constructor
     · exact neq01
     · intro k
       exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
-    --exact fun k ↦ (fun {α} [BEq α] [LawfulBEq α] a b ↦ (bne_iff_ne a b).mp) ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0
---    simpa [← Set.univ_subset_iff, Set.subset_def, asOrderHom, not_or] using (horn.face 1 0 neq01).2
   }
---  let h₁ : Set.Nonempty {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by exact h
   let j := Classical.choose e
-  have j0 : j = 0 := by sorry
+  have j0 : j = 0 := by sorry -- j is indeed unique and is zero, but it might be tedious to show
   have e2 : (¬0 = 1 ∧ ∀ (k : Fin (len (SimplexCategory.mk 2))), (horn.face 1 0 neq01).1.toOrderHom k ≠ 0) := by{
     constructor
     · exact Nat.zero_ne_one
     · intro k
       exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
   }
-  have h : (hom_by_faces_1th_3horn σ).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
+  have h : (hom_by_faces_1th_3horn σ compatible).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
     exact rfl
   }
   rw[h]
@@ -112,7 +110,7 @@ lemma hom_by_faces_13_works_fine {S : SSet} [Quasicategory S] (σ : Fin (4) → 
   rw[h2id]
   exact rfl
 }
-
+/-
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
   app m := by{
     intro f
@@ -158,9 +156,8 @@ def hom_by_faces {S : SSet} [Quasicategory S] {n : ℕ} {i : Fin (n+1)} (σ : Fi
     intro l m f
     sorry
   }
+-/
 
-
-#check horn.hom_ext
 #check Δ[3].obj {unop := [n]}
 
 
@@ -196,8 +193,12 @@ lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategory�
 
 -- I forgot how to rewrite when there is no equality lemma, so I'm making equality lemmata
 lemma delta_is {S : SSet} {n} (i : Fin (n + 2)) : (SimplicialObject.δ S i : S _[n + 1] ⟶ S _[n]) = S.map (SimplexCategory.δ i).op := rfl
+lemma sigma_is {S : SSet} {n} (i : Fin (n + 2)) : (SimplicialObject.σ S i : S _[n + 1] ⟶ S _[n + 1 + 1]) = S.map (SimplexCategory.σ i).op := rfl
 
-
+lemma composition_hilfslemma {S : SSet} [Quasicategory S] {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map b ∘ S.map a := by exact
+  rfl
+lemma composition_hilfslemma2 {S : SSet} [Quasicategory S] {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map (a ≫ b) := by exact
+  (Functor.map_comp S a b).symm
 
 -- left homotopic to right homotopic
 
@@ -208,42 +209,98 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
   obtain ⟨hleft1, hleft2, hleft3⟩ := hσ
   constructor
   · exact hleft.1
-  · let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
+  · let s : Fin 4 → (S _[2])
+      | 0 => (SimplicialObject.σ S 0 f)
+      | 1 => σ
+      | 2 => σ
+      | 3 => (SimplicialObject.σ S 1 f)
+      --let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
+    have temp_s0 : s 0 = (SimplicialObject.σ S 0 f) := rfl
+    have temp_s2 : s 2 = σ := rfl
+    have temp_s3 : s 3 = (SimplicialObject.σ S 1 f) := rfl
+    have temp_composition1 : SimplicialObject.δ S 2 (SimplicialObject.σ S 1 f) = ((S.map (SimplexCategory.δ 2).op) ∘ (S.map (SimplexCategory.σ 1).op)) f := rfl
+    have temp_composition2 : S.map (SimplexCategory.σ 0).op (S.map (δ 1).op f) = ((S.map (SimplexCategory.σ 0).op) ∘ (S.map (SimplexCategory.δ 1).op)) f := rfl
+
+--    have te := S.map_comp (mkHom (Fin.succAboveEmb 2).toOrderHom).op (mkHom (Fin.predAbove 1 (Fin.predAbove_right_monotone 1))).op
+--    have temp_composition2 : (S.map (SimplexCategory.δ 2).op) ∘ (S.map (SimplexCategory.σ 1).op) = S.map ((SimplexCategory.δ 2).op ≫ (SimplexCategory.σ 1).op) := by {
+--      exact composition_hilfslemma (SimplexCategory.δ 2).op (SimplexCategory.σ 1).op
+--      rw[S.map_comp ((SimplexCategory.δ 2).op) ((SimplexCategory.σ 1).op)]
+--      simp[composition_hilfslemma]
+--      sorry -- a simplicial identity? did not expect this
+--    }
+    have temp_a_simplicial_identity : (SimplexCategory.σ 1).op ≫ (δ 2).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
+      sorry
+    }
+    have temp_another_simplicial_identity : (SimplexCategory.δ 1).op ≫ (SimplexCategory.σ 0).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
+      sorry
+    }
+--    have id_is_id : S.map (𝟙 (op [1] : SimplexCategoryᵒᵖ)) f = f := by exact FunctorToTypes.map_id_apply S f
+    have temp_funcomp : (S.map (SimplexCategory.σ 1).op ≫ S.map (δ 2).op) f = S.map ((SimplexCategory.σ 1).op ≫ (δ 2).op) f := by {
+      rw[composition_hilfslemma2 (SimplexCategory.σ 1).op (δ 2).op]
+    }
+    have temp_funcomp2 : (S.map (SimplexCategory.δ 1).op ≫ S.map (SimplexCategory.σ 0).op) f = S.map ((SimplexCategory.δ 1).op ≫ (SimplexCategory.σ 0).op) f := by {
+      rw[composition_hilfslemma2 (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op]
+    }
+    have compatible_s : S.map (δ 2).op (s 3) = S.map (δ 2).op (s 2) ∧  S.map (δ 0).op (s 3) = S.map (δ 2).op (s 0) ∧ S.map (δ 0).op (s 2) = S.map (δ 1).op (s 0) := by{
+      constructor
+      · rw[temp_s3, temp_s2, ← delta_is, hleft3, temp_composition1, ← composition_hilfslemma (SimplexCategory.σ 1).op (SimplexCategory.δ 2).op, temp_funcomp]
+        rw[temp_a_simplicial_identity, FunctorToTypes.map_id_apply S f]
+        rw[delta_is]
+        simp[SimplicialObject.δ, SimplicialObject.σ]
+        rw[temp_composition2, ← composition_hilfslemma (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, temp_funcomp2, temp_another_simplicial_identity, FunctorToTypes.map_id_apply S f]
+      · constructor
+        · rw[temp_s3, temp_s0, ← delta_is]
+          sorry
+        · rw[temp_s0, temp_s2, ← delta_is, hleft1]
+          sorry
+    }
     let a : Λ[3,1] ⟶ S := by {
-    use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).app m)
-    apply (hom_by_faces_1th_3horn (s : Fin 4 → S _[2])).naturality}
-    have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 0 f := by sorry
-    have temp13l : @LT.lt (Fin (3 + 1)) instLTFin 1 (Fin.last 3) := by exact Fin.lt_last_iff_coe_castPred.mpr rfl
-    obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (temp13l) a
+      use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) compatible_s).app m)
+      apply (hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) compatible_s).naturality}
+    have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 0 f := by {
+      apply hom_by_faces_13_works_fine_0
+      exact compatible_s
+    }
+    have weirdrfl : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl -- I don't understand why this is necessary sometimes but apparently it is
+    obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (Fin.lt_last_iff_coe_castPred.mpr weirdrfl) a
     let B := b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp02) (temp23))
     use B
-    have B_is : B = b.app (op [2]) (standardSimplex.triangle 0 2 3 temp02 (_ : OfNat.ofNat 2 ≤ 3)) := rfl
+    have B_is : B = b.app (op [2]) (standardSimplex.triangle 0 2 3 temp02 (_ : OfNat.ofNat 2 ≤ 3)) := rfl --obsolete
     constructor
-    · have temp71 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
-      have temp72 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
-      have temp8 : SimplicialObject.δ S 0 (b.app (op [2]) (standardSimplex.triangle 1 2 3 (temp12) (temp23))) = b.app (op [1]) (SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23))) := by{
-        exact (FunctorToTypes.naturality Δ[2 + 1] S b (δ 0).op (standardSimplex.triangle 1 2 3 temp12 temp23)).symm
-        }
-      have temp9 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
-        rw[temp72.symm]
-        rw[B_is]
+    · have d0_123_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+      have d0_023_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+      have dS0_B_is_b_23 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
+        rw[d0_023_is_23.symm]
+        simp[B]
         rw[delta_is, delta_is]
         exact standard_simplex_naturality (δ 0).op b (standardSimplex.triangle 0 2 3 temp02 temp23)
       }
-      rw[temp9]
-      have temp_incl : (standardSimplex.edge 3 2 3 (temp23)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by exact temp71
-      have temp_comp : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by sorry
-      have temp6 : b.app (op [1]) (standardSimplex.edge 3 2 3 (_ : OfNat.ofNat 2 ≤ 3)) = a.app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by {
-        rw[temp_incl]
+      rw[dS0_B_is_b_23]
+      have hornincl_23 : (standardSimplex.edge 3 2 3 (temp23)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by exact d0_123_is_23
+      have temp_comp1 : (b.app (op [1])) ∘ ((hornInclusion 3 1).app (op [1])) = a.app (op [1]) := by exact congrFun (congrArg NatTrans.app (id hb.symm)) (op [1])
+      have temp_comp : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by {
+        intro x
+        rw[← temp_comp1]
+        exact rfl
+      }
+      have b_23_is_a_23 : b.app (op [1]) (standardSimplex.edge 3 2 3 (_ : OfNat.ofNat 2 ≤ 3)) = a.app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by {
+        rw[hornincl_23]
         exact temp_comp (horn.edge 3 1 2 3 temp23 Finset.card_le_three)
       }
-      rw[temp6]
-      have temp31 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by sorry
-      have temp3 : a.app (op [1]) (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)) = SimplicialObject.δ S 0 (a.app (op [2]) (horn.face 1 0 neq01)) := by{
-        rw[temp31]
+      rw[b_23_is_a_23]
+      let temp1 := (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)).val
+      let temp2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
+      have temp3 : temp1 = temp2 := by sorry
+      have hornedge23_is_d0_hornface_0 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by {
+--        rw?
+        sorry
+        --the problem here is that the definition of horn.edge is complicated
+      }
+      have a_23_is_dS0_a_face0 : a.app (op [1]) (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)) = SimplicialObject.δ S 0 (a.app (op [2]) (horn.face 1 0 neq01)) := by{
+        rw[hornedge23_is_d0_hornface_0]
         apply (FunctorToTypes.naturality Λ[3,1] S a (δ 0).op (horn.face 1 0 neq01))
       }
-      rw[temp3]
+      rw[a_23_is_dS0_a_face0]
       rw[temp_a0]
       -- now this should really just be a simplicial identity
       sorry
