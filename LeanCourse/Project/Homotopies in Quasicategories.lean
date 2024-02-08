@@ -34,82 +34,13 @@ variable (f g : S _[1])
 
 
 
--- some lemmata and constructions that I shouldn't need
-def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S _[2])
-  | 0 => σ₀
-  | 1 => σ₁
-  | 2 => σ₂
-  | 3 => σ₃
 
-lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
-lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
-lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
-lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
-
-#check asOrderHom
 
 noncomputable section
-set_option maxHeartbeats 2000000
--- (only because of the "well-founded"- why is it such an issue? should I try to avoid noncomputable?)
-
-
--- we can define a morphism from a horn by just giving the image on suitable faces
-
-/-
-def hom_by_faces_1th_3horn_old {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,1] ⟶ S where
-  app m := by{
-    intro f
-    have f2 := f.2
-    have h : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j) := by{
-      simpa [← Set.univ_subset_iff, Set.subset_def, asOrderHom, not_or] using f.2
-    }
-    let h₁ : Set.Nonempty {j : Fin (4) | ¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j} := by exact h
-    let j := Classical.choose h
-    have hj : ¬j = 1 := (Classical.choose_spec h).1
-    have hji : ∀ k, f.1.toOrderHom k ≠ j := (Classical.choose_spec h).2
-    let f₁ := f.1
-    have H : f = (Λ[2+1, 1].map (factor_δ (SimplexCategory.mkHom f.1.toOrderHom) j).op) (horn.face 1 j hj) := by
-      apply Subtype.ext
-      exact (factor_δ_spec (SimplexCategory.mkHom f.1.toOrderHom) j hji).symm
-    use S.map (factor_δ (SimplexCategory.mkHom f.1.toOrderHom) j).op (σ j)
-  }
-  naturality := by{
-    intro l m f
-    simp
-    sorry
-  }
--/
+-- set_option maxHeartbeats 2000000
 
 
 
-lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 0 neq01) = σ 0 := by{
-  have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
-    use 0
-    constructor
-    · exact neq01
-    · intro k
-      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
-  }
-  let j := Classical.choose e
-  have j0 : j = 0 := by sorry -- j is indeed unique and is zero, but it might be tedious to show
-  have e2 : (¬0 = 1 ∧ ∀ (k : Fin (len (SimplexCategory.mk 2))), (horn.face 1 0 neq01).1.toOrderHom k ≠ 0) := by{
-    constructor
-    · exact Nat.zero_ne_one
-    · intro k
-      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
-  }
-  have h : (hom_by_faces_1th_3horn σ compatible).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
-    exact rfl
-  }
-  rw[h]
-  rw[j0]
-  simp
-  have hid : (factor_δ (δ 0) 0).op = op (SimplexCategory.Hom.id [2]) := by sorry -- something hom_ext?
-  rw[hid]
-  have h2id : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]) := by sorry -- should be possible to find
-  rw[h2id]
-  exact rfl
-}
 /-
 def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) : Λ[3,2] ⟶ S where
   app m := by{
@@ -195,12 +126,33 @@ lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategory�
 lemma delta_is {S : SSet} {n} (i : Fin (n + 2)) : (SimplicialObject.δ S i : S _[n + 1] ⟶ S _[n]) = S.map (SimplexCategory.δ i).op := rfl
 lemma sigma_is {S : SSet} {n} (i : Fin (n + 2)) : (SimplicialObject.σ S i : S _[n + 1] ⟶ S _[n + 1 + 1]) = S.map (SimplexCategory.σ i).op := rfl
 
-lemma composition_hilfslemma {S : SSet} [Quasicategory S] {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map b ∘ S.map a := by exact
-  rfl
-lemma composition_hilfslemma2 {S : SSet} [Quasicategory S] {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map (a ≫ b) := by exact
-  (Functor.map_comp S a b).symm
+lemma composition_gg_is_comp {S : SSet} {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map b ∘ S.map a := by exact rfl
+lemma composition_functoriality {S : SSet} {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k): S.map a ≫ S.map b = S.map (a ≫ b) := by exact (Functor.map_comp S a b).symm
+lemma composition_functoriality_applied {n m k : SimplexCategoryᵒᵖ } (a : n ⟶ m) (b : m ⟶ k) (f : S _[len n.unop]) : (S.map a ≫ S.map b) f = S.map (a ≫ b) f := by rw[composition_functoriality a b]
+lemma composition_applied {S : SSet} (d1 : S _[1 + 1] ⟶ S _[1]) (s1 : S _[1] ⟶ S _[1 + 1]) (f : S _[1]) : d1 (s1 f) = (d1 ∘ s1) f := rfl
+lemma composition_op {n m k : SimplexCategory} (a : n ⟶ m) (b : m ⟶ k) : (a ≫ b).op = b.op ≫ a.op := by exact rfl
 
--- left homotopic to right homotopic
+-- simplicial identities, sorried out
+lemma simpl_id_σ1_δ2 : (SimplexCategory.σ 1).op ≫ (δ 2).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
+  rw[← composition_op (δ 2) (SimplexCategory.σ 1)]
+--  rw[δ_comp_σ_succ] doesn't work because 2 = 1 + 1 is too hard or something
+  sorry
+}
+lemma simpl_id_δ1_σ0 : (SimplexCategory.δ 1).op ≫ (SimplexCategory.σ 0).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
+  rw[← composition_op (SimplexCategory.σ 0) (δ 1), ← op_id]
+  sorry
+}
+lemma simpl_id_σ1_δ0 : (SimplexCategory.σ 1).op ≫ (SimplexCategory.δ 0).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
+  rw[← composition_op (SimplexCategory.δ 0) (σ 1), ← op_id]
+  sorry
+}
+
+lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
+lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
+
+-- if f and g are left homotopic, then they are right homotopic
 
 lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g → right_homotopic f g := by{
   intro hleft
@@ -214,45 +166,39 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
       | 1 => σ
       | 2 => σ
       | 3 => (SimplicialObject.σ S 1 f)
-      --let s : Fin 4 → (S _[2]) := makefunction (SimplicialObject.σ S 0 f) σ σ (SimplicialObject.σ S 1 f)
     have temp_s0 : s 0 = (SimplicialObject.σ S 0 f) := rfl
     have temp_s2 : s 2 = σ := rfl
     have temp_s3 : s 3 = (SimplicialObject.σ S 1 f) := rfl
-    have temp_composition1 : SimplicialObject.δ S 2 (SimplicialObject.σ S 1 f) = ((S.map (SimplexCategory.δ 2).op) ∘ (S.map (SimplexCategory.σ 1).op)) f := rfl
     have temp_composition2 : S.map (SimplexCategory.σ 0).op (S.map (δ 1).op f) = ((S.map (SimplexCategory.σ 0).op) ∘ (S.map (SimplexCategory.δ 1).op)) f := rfl
-
---    have te := S.map_comp (mkHom (Fin.succAboveEmb 2).toOrderHom).op (mkHom (Fin.predAbove 1 (Fin.predAbove_right_monotone 1))).op
---    have temp_composition2 : (S.map (SimplexCategory.δ 2).op) ∘ (S.map (SimplexCategory.σ 1).op) = S.map ((SimplexCategory.δ 2).op ≫ (SimplexCategory.σ 1).op) := by {
---      exact composition_hilfslemma (SimplexCategory.δ 2).op (SimplexCategory.σ 1).op
---      rw[S.map_comp ((SimplexCategory.δ 2).op) ((SimplexCategory.σ 1).op)]
---      simp[composition_hilfslemma]
---      sorry -- a simplicial identity? did not expect this
---    }
-    have temp_a_simplicial_identity : (SimplexCategory.σ 1).op ≫ (δ 2).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
-      sorry
-    }
-    have temp_another_simplicial_identity : (SimplexCategory.δ 1).op ≫ (SimplexCategory.σ 0).op = 𝟙 (op [1] : SimplexCategoryᵒᵖ) := by {
-      sorry
-    }
---    have id_is_id : S.map (𝟙 (op [1] : SimplexCategoryᵒᵖ)) f = f := by exact FunctorToTypes.map_id_apply S f
     have temp_funcomp : (S.map (SimplexCategory.σ 1).op ≫ S.map (δ 2).op) f = S.map ((SimplexCategory.σ 1).op ≫ (δ 2).op) f := by {
-      rw[composition_hilfslemma2 (SimplexCategory.σ 1).op (δ 2).op]
+      rw[composition_functoriality (SimplexCategory.σ 1).op (δ 2).op]
     }
     have temp_funcomp2 : (S.map (SimplexCategory.δ 1).op ≫ S.map (SimplexCategory.σ 0).op) f = S.map ((SimplexCategory.δ 1).op ≫ (SimplexCategory.σ 0).op) f := by {
-      rw[composition_hilfslemma2 (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op]
+      rw[composition_functoriality (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op]
     }
     have compatible_s : S.map (δ 2).op (s 3) = S.map (δ 2).op (s 2) ∧  S.map (δ 0).op (s 3) = S.map (δ 2).op (s 0) ∧ S.map (δ 0).op (s 2) = S.map (δ 1).op (s 0) := by{
       constructor
-      · rw[temp_s3, temp_s2, ← delta_is, hleft3, temp_composition1, ← composition_hilfslemma (SimplexCategory.σ 1).op (SimplexCategory.δ 2).op, temp_funcomp]
-        rw[temp_a_simplicial_identity, FunctorToTypes.map_id_apply S f]
+      · rw[temp_s3, temp_s2, ← delta_is, hleft3, composition_applied (SimplicialObject.δ S 2) (SimplicialObject.σ S 1)]
+        rw[delta_is, sigma_is]
+        rw[← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 2).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 2).op]
+        rw[simpl_id_σ1_δ2, FunctorToTypes.map_id_apply S f]
         rw[delta_is]
         simp[SimplicialObject.δ, SimplicialObject.σ]
-        rw[temp_composition2, ← composition_hilfslemma (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, temp_funcomp2, temp_another_simplicial_identity, FunctorToTypes.map_id_apply S f]
+        rw[temp_composition2, ← composition_gg_is_comp (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, temp_funcomp2, simpl_id_δ1_σ0, FunctorToTypes.map_id_apply S f]
       · constructor
-        · rw[temp_s3, temp_s0, ← delta_is]
+        · rw[temp_s3, temp_s0, ← delta_is, composition_applied (SimplicialObject.δ S 0) (SimplicialObject.σ S 1), delta_is, sigma_is, ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 0).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 0).op]
+          rw[sigma_is]
+          simp[SimplicialObject.δ, SimplicialObject.σ]
+          rw[composition_applied (S.map (δ 0).op) (S.map (SimplexCategory.σ 1).op), ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 0).op, composition_functoriality_applied _ _, simpl_id_σ1_δ0, FunctorToTypes.map_id_apply S f]
+--          rw[temp_a_simplicial_identity, FunctorToTypes.map_id_apply S f]
           sorry
-        · rw[temp_s0, temp_s2, ← delta_is, hleft1]
+        · rw[temp_s0, temp_s2, ← delta_is, hleft1, sigma_is]
+        --, ← composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 0).op]
           sorry
+--          rw[temp_a_simplicial_identity, FunctorToTypes.map_id_apply S f]
+--          rw[delta_is]
+--          simp[SimplicialObject.δ, SimplicialObject.σ]
+--          rw[temp_composition2, ← composition_hilfslemma (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, temp_funcomp2, temp_another_simplicial_identity, FunctorToTypes.map_id_apply S f]
     }
     let a : Λ[3,1] ⟶ S := by {
       use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) compatible_s).app m)
@@ -319,21 +265,26 @@ lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _
 }
 
 
-#check horn.hom_ext
--- for this proof, I need to find out how to explicitly define a map Λ _[k i] → S
--- oh maybe by horn.ext which doesn't work in this file
-
 def qc_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := left_homotopic f g ∨ right_homotopic f g
 
 #check (qc_homotopic f g)
-#check horn.hom_ext
--- lemmas homotopic_of_right_homotopic and homotopic_of_left_homotopic would be useful to have
+
+
+
+
+
+
+
+
+
+
+
+
 
 /-
-The next steps are:
-- the homotopy relation is an equivalence relation on the set of morphism with domain x and codomain y.
-- Composition is unique up to homotopy: Let f : x → y and g : y → z and let h, h′ : x → z be two possible compositions. Prove h ∼ h′.
-- Composition is associative up to homotopy: For three morphisms f : x → y, g : y → z, h : z → w, there exists a homotopy h ◦ (g ◦ f ) ∼ (h ◦ g) ◦ f .
-- Identity maps: there are equivalences f ∼ f ◦ idx ∼ idy ◦ f where idx = S.σ 0 (S.δ 1 f)
-- most challenging part up to here: define the Homotopy Category of a Quasicategory S
+Note about the sorry's:
+- In `HornMorphisms`, naturality in the definition of `hom_by_faces_1th_3horn` is missing.
+- In `HornMorphisms`, the `tempij` lemmas should only be temporary, but there are places in which e.g. `i ≤ j : Prop` is needed and I can't find them
+- The simplicial identities, I want to fix this and it should not be too hard, but maybe there was a mistake in my compatibility condition. Important TO DO
+
 -/
