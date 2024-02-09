@@ -33,9 +33,14 @@ def hom_by_interior {S : SSet} {n : ℕ} (σ : S _[n]) : Δ[n] ⟶ S where
     exact rfl
   }
 
+-- three elements of `S _[2]` are called `horn1_compatible` if they agree along the three edges that have 1 as an endpoint:
+
+def horn1_compatible {S : SSet} (σ0 σ2 σ3 : S _[2]) : Prop := S.map (δ 2).op (σ3) = S.map (δ 2).op (σ2) ∧ S.map (δ 0).op (σ3) = S.map (δ 2).op (σ0) ∧ S.map (δ 0).op (σ2) = S.map (δ 1).op (σ0)
+
+
 -- we can define a morphism from a horn by just giving the image on suitable faces
 
-def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)): Λ[3,1] ⟶ S where
+def hom_by_faces_1th_3horn {S : SSet} (σ : Fin (4) → S _[2]) (h : horn1_compatible (σ 0) (σ 2) (σ 3)) : Λ[3,1] ⟶ S where
   app m := by{
     intro f
     have h : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, f.1.toOrderHom k ≠ j) := by{
@@ -55,7 +60,11 @@ def hom_by_faces_1th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
     sorry
   }
 
-def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 1).op (σ 3) = S.map (δ 2).op (σ 1) ∧ S.map (δ 0).op (σ 1) = S.map (δ 0).op (σ 0)) : Λ[3,2] ⟶ S where
+-- three elements of `S _[2]` are called `horn2_compatible` if they agree along the three edges that have 2 as an endpoint:
+
+def horn2_compatible {S : SSet} (σ0 σ1 σ3 : S _[2]) : Prop := S.map (δ 0).op (σ3) = S.map (δ 2).op (σ0) ∧ S.map (δ 1).op (σ3) = S.map (δ 2).op (σ1) ∧ S.map (δ 0).op (σ1) = S.map (δ 0).op (σ0)
+
+def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (h : horn2_compatible (σ 0) (σ 1) (σ 3)) : Λ[3,2] ⟶ S where
   app m := by{
     intro f
     have h : ∃ j : Fin (4), (¬j = 2 ∧ ∀ k, f.1.toOrderHom k ≠ j) := by{
@@ -77,7 +86,7 @@ def hom_by_faces_2th_3horn {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]
 
 -- define `hom_by_faces` in more generality
 
--- in the following definition, the compatibility condition is still missing `(compatible : S.map (δ 2 2) (σ 3) = S.map (δ 2 2) (σ 2) etc.)` but it's more difficult to state this (finitely) in the general case
+-- in the following definition, the compatibility condition is still missing but it's more difficult to state this (finitely) in the general case
 -- this condition is necessary to prove naturality
 
 def hom_by_faces {S : SSet} [Quasicategory S] {n : ℕ} {i : Fin (n+1)} (σ : Fin (n+2) → S _[n]) : Λ[n+1,i] ⟶ S where
@@ -114,7 +123,7 @@ lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
 lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
 lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
 
-lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : S.map (δ 2).op (σ 3) = S.map (δ 2).op (σ 2) ∧ S.map (δ 0).op (σ 3) = S.map (δ 2).op (σ 0) ∧ S.map (δ 0).op (σ 2) = S.map (δ 1).op (σ 0)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 0 neq01) = σ 0 := by{
+lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : horn1_compatible (σ 0) (σ 2) (σ 3)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 0 neq01) = σ 0 := by{
   have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
     use 0
     constructor
