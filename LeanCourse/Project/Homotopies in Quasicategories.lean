@@ -134,13 +134,9 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
     let a : Λ[3,1] ⟶ S := by {
       use fun m ↦ ((hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) compatible_s).app m)
       apply (hom_by_faces_1th_3horn (s : Fin 4 → S _[2]) compatible_s).naturality}
-    have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 0 f := by {
-      sorry
- --     simp[a]
- --     simp[SimplicialObject.σ]
- --     subst[s 2]
- --     apply hom_by_faces_13_works_fine_0
- --     exact compatible_s
+    have temp_a0 : a.app (op [2]) (horn.face 1 0 neq01) = SimplicialObject.σ S 1 f := by {
+      apply hom_by_faces_13_works_fine_0
+      exact compatible_s
     }
     have weirdrfl : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl -- I don't understand why this is necessary sometimes but apparently it is
     obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (Fin.lt_last_iff_coe_castPred.mpr weirdrfl) a
@@ -173,7 +169,6 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
       let temp2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
       have temp3 : temp1 = temp2 := by sorry
       have hornedge23_is_d0_hornface_0 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by {
---        rw?
         sorry
         --the problem here is that the definition of horn.edge is complicated
       }
@@ -183,8 +178,18 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
       }
       rw[a_23_is_dS0_a_face0]
       rw[temp_a0]
-      -- now this should really just be a simplicial identity
-      sorry
+      rw[delta_is, delta_is]
+      simp[SimplicialObject.σ]
+      rw[composition_applied (S.map (δ 0).op) (S.map (SimplexCategory.σ 1).op)]
+      rw[composition_applied (S.map (SimplexCategory.σ 0).op) (S.map (δ 0).op)]
+      rw[← composition_gg_is_comp _ _]
+      rw[← composition_gg_is_comp _ _]
+      rw[composition_functoriality _ _]
+      rw[composition_functoriality _ _]
+      rw[← composition_op _ _]
+      rw[← composition_op _ _]
+      rw[← δ_comp_σ_of_le (Fin.zero_le (Fin.castSucc 0))]
+      simp
     · constructor
       · sorry
       · sorry
