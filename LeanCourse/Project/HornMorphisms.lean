@@ -119,9 +119,14 @@ def makefunction {S : SSet} (σ₀ σ₁ σ₂ σ₃ : S _[2]) : Fin (4) → (S 
   | 3 => σ₃
 
 lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp03 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 3 := sorry
 lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
+lemma temp13 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 3 := sorry
 lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
 lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
+lemma neq12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≠ 2 := sorry
+lemma neq13 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≠ 3 := sorry
+
 
 lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : horn1_compatible (σ 0) (σ 2) (σ 3)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 0 neq01) = σ 0 := by{
   have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
@@ -152,5 +157,67 @@ lemma hom_by_faces_13_works_fine_0 {S : SSet} [Quasicategory S] (σ : Fin (4) �
   exact rfl
 }
 
+lemma hom_by_faces_13_works_fine_2 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : horn1_compatible (σ 0) (σ 2) (σ 3)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 2 neq12.symm) = σ 2 := by{
+  sorry
+/-
+  have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
+    use 0
+    constructor
+    · exact neq01
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+  }
+  let j := Classical.choose e
+  have j0 : j = 0 := by sorry -- j is indeed unique and is zero, but it might be tedious to show
+  have e2 : (¬0 = 1 ∧ ∀ (k : Fin (len (SimplexCategory.mk 2))), (horn.face 1 0 neq01).1.toOrderHom k ≠ 0) := by{
+    constructor
+    · exact Nat.zero_ne_one
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+  }
+  have h : (hom_by_faces_1th_3horn σ compatible).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
+    exact rfl
+  }
+  rw[h]
+  rw[j0]
+  simp
+  have hid : (factor_δ (δ 0) 0).op = op (SimplexCategory.Hom.id [2]) := by sorry -- something hom_ext?
+  rw[hid]
+  have h2id : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]) := by sorry -- should be possible to find
+  rw[h2id]
+  exact rfl
+-/
+}
 
+lemma hom_by_faces_13_works_fine_3 {S : SSet} [Quasicategory S] (σ : Fin (4) → S _[2]) (compatible : horn1_compatible (σ 0) (σ 2) (σ 3)) : (hom_by_faces_1th_3horn σ compatible).app (op (SimplexCategory.mk 2)) (horn.face 1 3 neq13.symm) = σ 3 := by{
+  sorry
+/-
+  have e : ∃ j : Fin (4), (¬j = 1 ∧ ∀ k, (horn.face 1 0 neq01).1.toOrderHom k ≠ j) := by{
+    use 0
+    constructor
+    · exact neq01
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+  }
+  let j := Classical.choose e
+  have j0 : j = 0 := by sorry -- j is indeed unique and is zero, but it might be tedious to show
+  have e2 : (¬0 = 1 ∧ ∀ (k : Fin (len (SimplexCategory.mk 2))), (horn.face 1 0 neq01).1.toOrderHom k ≠ 0) := by{
+    constructor
+    · exact Nat.zero_ne_one
+    · intro k
+      exact (bne_iff_ne ((Hom.toOrderHom (horn.face 1 0 neq01).1) k) 0).mp rfl
+  }
+  have h : (hom_by_faces_1th_3horn σ compatible).app (op [2]) (horn.face 1 0 neq01) = S.map (factor_δ (SimplexCategory.mkHom (horn.face 1 0 neq01).1.toOrderHom) j).op (σ j) := by {
+    exact rfl
+  }
+  rw[h]
+  rw[j0]
+  simp
+  have hid : (factor_δ (δ 0) 0).op = op (SimplexCategory.Hom.id [2]) := by sorry -- something hom_ext?
+  rw[hid]
+  have h2id : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]) := by sorry -- should be possible to find
+  rw[h2id]
+  exact rfl
+-/
+}
 end SSet

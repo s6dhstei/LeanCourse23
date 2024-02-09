@@ -37,7 +37,7 @@ variable (f g : S _[1])
 
 
 noncomputable section
--- set_option maxHeartbeats 2000000
+set_option maxHeartbeats 2000000
 
 
 #check Δ[3].obj {unop := [n]}
@@ -52,7 +52,7 @@ if there exists σ : S₂ such that d₀σ = f, d₁σ = g and d₂σ = s₀d₁
 structure htpy {S : SSet} [Quasicategory S] (f g : S _[1]) where
   same_start : (S.δ 1) f = (S.δ 1) g
   same_end : (S.δ 0) f = (S.δ 0) g
-  right_filler : ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
+  right_filler : ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 1 f) ∧ S.δ 1 σ = f ∧ S.δ 2 σ = g
   left_filler :  ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 
 
@@ -60,7 +60,7 @@ def left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
   exact ((S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g) ∧ ∃ σ : S _[2], S.δ 0 σ = f ∧ S.δ 1 σ = g ∧ S.δ 2 σ = S.σ 0 (S.δ 1 f)
 }
 def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
-  exact ((S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g) ∧ ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 0 f) ∧ S.δ 1 σ = g ∧ S.δ 2 σ = f
+  exact ((S.δ 1) f = (S.δ 1) g ∧ (S.δ 0) f = (S.δ 0) g) ∧ ∃ σ : S _[2], S.δ 0 σ = S.σ 0 (S.δ 0 f) ∧ S.δ 1 σ = f ∧ S.δ 2 σ = g
 }
 
 
@@ -83,6 +83,31 @@ lemma composition_functoriality_applied {n m k : SimplexCategoryᵒᵖ } (a : n 
 lemma composition_applied {S : SSet} {m n : ℕ} (d1 : S _[m] ⟶ S _[n]) (s1 : S _[n] ⟶ S _[m]) (f : S _[n]) : d1 (s1 f) = (d1 ∘ s1) f := rfl
 lemma composition_op {n m k : SimplexCategory} (a : n ⟶ m) (b : m ⟶ k) : (a ≫ b).op = b.op ≫ a.op := by exact rfl
 
+-- some helpful standardSimplex calculations to rewrite
+lemma d0_123_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+lemma d1_123_is_13 : SimplicialObject.δ Δ[3] 1 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 1 3 (temp13) := by sorry
+lemma d2_123_is_12 : SimplicialObject.δ Δ[3] 2 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 1 2 (temp12) := by sorry
+lemma d0_023_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
+lemma d1_023_is_03 : SimplicialObject.δ Δ[3] 1 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 0 3 (temp03) := by sorry
+lemma d2_023_is_02 : SimplicialObject.δ Δ[3] 2 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 0 2 (temp02) := by sorry
+
+lemma hornincl_23 : (standardSimplex.edge 3 2 3 (temp23)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by exact d0_123_is_23
+lemma hornincl_03 : (standardSimplex.edge 3 0 3 (temp03)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 0 3 temp03 Finset.card_le_three) := by exact rfl
+lemma hornincl_02 : (standardSimplex.edge 3 0 2 (temp02)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 0 2 temp02 Finset.card_le_three) := by exact rfl
+
+lemma hornedge23_is_d0_hornface_0 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by {
+  let temp1 := (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)).val
+  let temp2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
+  have temp3 : temp1 = temp2 := by sorry
+  sorry
+--the problem here is that the definition of horn.edge is complicated
+}
+lemma hornedge03_is_d1_hornface_2 : horn.edge 3 1 0 3 (temp03) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 2 neq12.symm) := by {
+  sorry
+}
+lemma hornedge02_is_d1_hornface_3 : horn.edge 3 1 0 2 (temp02) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 3 neq13.symm) := by {
+  sorry
+}
 
 -- if f and g are left homotopic, then they are right homotopic
 
@@ -104,30 +129,32 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
     have compatible_s : horn1_compatible (s 0) (s 2) (s 3) := by{
       constructor
       · -- the 01-edge is (σ 0) ((δ 1) f)
-        rw[s3_s3, s2_s2, ← delta_is, hleft3, composition_applied (SimplicialObject.σ S 0) (SimplicialObject.δ S 1)]
-        rw[delta_is, delta_is, sigma_is]
+        rewrite[s3_s3, s2_s2, ← delta_is, hleft3, composition_applied (SimplicialObject.σ S 0) (SimplicialObject.δ S 1)]
+        rewrite[delta_is, delta_is, sigma_is]
         simp[SimplicialObject.σ]
-        rw[composition_applied (S.map (SimplexCategory.σ 0).op) (S.map (SimplexCategory.δ 1).op), ← composition_gg_is_comp (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, composition_functoriality_applied S (δ 1).op (SimplexCategory.σ 0).op]
-        rw[composition_applied (S.map (SimplexCategory.δ 2).op) (S.map (SimplexCategory.σ 0).op), ← composition_gg_is_comp (SimplexCategory.σ 0).op (SimplexCategory.δ 2).op, composition_functoriality_applied S (SimplexCategory.σ 0).op (δ 2).op]
-        rw[← composition_op, ← composition_op]
-        rw[← δ_comp_σ_of_gt _]
+        rewrite[composition_applied (S.map (SimplexCategory.σ 0).op) (S.map (SimplexCategory.δ 1).op), ← composition_gg_is_comp (SimplexCategory.δ 1).op (SimplexCategory.σ 0).op, composition_functoriality_applied S (δ 1).op (SimplexCategory.σ 0).op]
+        rewrite[composition_applied (S.map (SimplexCategory.δ 2).op) (S.map (SimplexCategory.σ 0).op), ← composition_gg_is_comp (SimplexCategory.σ 0).op (SimplexCategory.δ 2).op, composition_functoriality_applied S (SimplexCategory.σ 0).op (δ 2).op]
+        rewrite[← composition_op, ← composition_op]
+        rewrite[← δ_comp_σ_of_gt _]
         simp
         exact Fin.coe_sub_iff_lt.mp rfl
       · constructor
         · -- the 12-edge is f
-          rw[s3_s3, s0_s0, ← delta_is, hleft1, ← delta_is, composition_applied (SimplicialObject.δ S 2) (SimplicialObject.σ S 1), delta_is, sigma_is, ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 2).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 2).op]
-          rw[← composition_op]
-          rw[δ_comp_σ_succ' _]
-          rw[op_id, FunctorToTypes.map_id_apply S f]
+          rewrite[s3_s3, s0_s0, ← delta_is, hleft1, ← delta_is, composition_applied (SimplicialObject.δ S 2) (SimplicialObject.σ S 1), delta_is, sigma_is, ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 2).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 2).op]
+          rewrite[← composition_op]
+          rewrite[δ_comp_σ_succ' _]
+          rewrite[op_id, FunctorToTypes.map_id_apply S f]
+          exact rfl
           exact rfl
         · -- the 13-edge is f = (δ 0) ((σ 0) f) = (δ 1) ((σ 1) f)
-          rw[s0_s0, s2_s2, ← delta_is, composition_applied (SimplicialObject.δ S 0) (SimplicialObject.σ S 0)]
-          rw[sigma_is]
+          rewrite[s0_s0, s2_s2, ← delta_is, composition_applied (SimplicialObject.δ S 0) (SimplicialObject.σ S 0)]
+          rewrite[sigma_is]
           simp[SimplicialObject.σ]
-          rw[composition_applied (S.map (SimplexCategory.δ 1).op) (S.map (SimplexCategory.σ 1).op), ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 1).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 1).op]
-          rw[delta_is, composition_applied (S.map (SimplexCategory.δ 0).op) (S.map (SimplexCategory.σ 0).op), ← composition_gg_is_comp (SimplexCategory.σ 0).op (SimplexCategory.δ 0).op, composition_functoriality_applied S (SimplexCategory.σ 0).op (δ 0).op]
-          rw[← composition_op, ← composition_op]
-          rw[δ_comp_σ_self' _, δ_comp_σ_self' _]
+          rewrite[composition_applied (S.map (SimplexCategory.δ 1).op) (S.map (SimplexCategory.σ 1).op), ← composition_gg_is_comp (SimplexCategory.σ 1).op (SimplexCategory.δ 1).op, composition_functoriality_applied S (SimplexCategory.σ 1).op (δ 1).op]
+          rewrite[delta_is, composition_applied (S.map (SimplexCategory.δ 0).op) (S.map (SimplexCategory.σ 0).op), ← composition_gg_is_comp (SimplexCategory.σ 0).op (SimplexCategory.δ 0).op, composition_functoriality_applied S (SimplexCategory.σ 0).op (δ 0).op]
+          rewrite[← composition_op, ← composition_op]
+          rewrite[δ_comp_σ_self' _, δ_comp_σ_self' _]
+          exact rfl
           exact rfl
           exact rfl
     }
@@ -138,62 +165,103 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
       apply hom_by_faces_13_works_fine_0
       exact compatible_s
     }
-    have weirdrfl : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl -- I don't understand why this is necessary sometimes but apparently it is
+    have temp_a2 : a.app (op [2]) (horn.face 1 2 neq12.symm) = SimplicialObject.σ S 0 f := by {
+      apply hom_by_faces_13_works_fine_2
+      exact compatible_s
+    }
+    have temp_a3 : a.app (op [2]) (horn.face 1 3 neq13.symm) = σ := by {
+      apply hom_by_faces_13_works_fine_3
+      exact compatible_s
+    }
+    have weirdrfl : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl
     obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (Fin.lt_last_iff_coe_castPred.mpr weirdrfl) a
     let B := b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp02) (temp23))
     use B
-    have B_is : B = b.app (op [2]) (standardSimplex.triangle 0 2 3 temp02 (_ : OfNat.ofNat 2 ≤ 3)) := rfl --obsolete
     constructor
-    · have d0_123_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
-      have d0_023_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 0 2 3 (temp02) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
-      have dS0_B_is_b_23 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
-        rw[d0_023_is_23.symm]
+    · have dS0_B_is_b_23 : SimplicialObject.δ S 0 B = b.app (op [1]) (standardSimplex.edge 3 2 3 (temp23)) := by {
+        rewrite[d0_023_is_23.symm]
         simp[B]
-        rw[delta_is, delta_is]
+        rewrite[delta_is, delta_is]
         exact standard_simplex_naturality (δ 0).op b (standardSimplex.triangle 0 2 3 temp02 temp23)
       }
-      rw[dS0_B_is_b_23]
-      have hornincl_23 : (standardSimplex.edge 3 2 3 (temp23)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by exact d0_123_is_23
-      have temp_comp1 : (b.app (op [1])) ∘ ((hornInclusion 3 1).app (op [1])) = a.app (op [1]) := by exact congrFun (congrArg NatTrans.app (id hb.symm)) (op [1])
-      have temp_comp : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by {
+      rewrite[dS0_B_is_b_23]
+      have b_hornincl31_x_is_a_x : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by {
         intro x
-        rw[← temp_comp1]
+        rewrite[← congrFun (congrArg NatTrans.app (id hb.symm)) (op [1])]
         exact rfl
       }
       have b_23_is_a_23 : b.app (op [1]) (standardSimplex.edge 3 2 3 (_ : OfNat.ofNat 2 ≤ 3)) = a.app (op [1]) (horn.edge 3 1 2 3 temp23 Finset.card_le_three) := by {
-        rw[hornincl_23]
-        exact temp_comp (horn.edge 3 1 2 3 temp23 Finset.card_le_three)
+        rewrite[hornincl_23]
+        exact b_hornincl31_x_is_a_x (horn.edge 3 1 2 3 temp23 Finset.card_le_three)
       }
-      rw[b_23_is_a_23]
-      let temp1 := (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)).val
-      let temp2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
-      have temp3 : temp1 = temp2 := by sorry
-      have hornedge23_is_d0_hornface_0 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by {
-        sorry
-        --the problem here is that the definition of horn.edge is complicated
-      }
+      rewrite[b_23_is_a_23]
       have a_23_is_dS0_a_face0 : a.app (op [1]) (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)) = SimplicialObject.δ S 0 (a.app (op [2]) (horn.face 1 0 neq01)) := by{
-        rw[hornedge23_is_d0_hornface_0]
+        rewrite[hornedge23_is_d0_hornface_0]
         apply (FunctorToTypes.naturality Λ[3,1] S a (δ 0).op (horn.face 1 0 neq01))
       }
-      rw[a_23_is_dS0_a_face0]
-      rw[temp_a0]
-      rw[delta_is, delta_is]
+      rewrite[a_23_is_dS0_a_face0, temp_a0, delta_is, delta_is]
       simp[SimplicialObject.σ]
-      rw[composition_applied (S.map (δ 0).op) (S.map (SimplexCategory.σ 1).op)]
-      rw[composition_applied (S.map (SimplexCategory.σ 0).op) (S.map (δ 0).op)]
-      rw[← composition_gg_is_comp _ _]
-      rw[← composition_gg_is_comp _ _]
-      rw[composition_functoriality _ _]
-      rw[composition_functoriality _ _]
-      rw[← composition_op _ _]
-      rw[← composition_op _ _]
-      rw[← δ_comp_σ_of_le (Fin.zero_le (Fin.castSucc 0))]
+      rewrite[composition_applied (S.map (δ 0).op) (S.map (SimplexCategory.σ 1).op), composition_applied (S.map (SimplexCategory.σ 0).op) (S.map (δ 0).op)]
+      rewrite[← composition_gg_is_comp _ _, ← composition_gg_is_comp _ _]
+      rewrite[composition_functoriality _ _, composition_functoriality _ _]
+      rewrite[← composition_op _ _, ← composition_op _ _]
+      rewrite[← δ_comp_σ_of_le (Fin.zero_le (Fin.castSucc 0))]
       simp
     · constructor
-      · sorry
-      · sorry
-}
+      · have dS1_B_is_b_03 : SimplicialObject.δ S 1 B = b.app (op [1]) (standardSimplex.edge 3 0 3 (temp03)) := by {
+          rewrite[d1_023_is_03.symm]
+          simp[B]
+          rewrite[delta_is, delta_is]
+          exact standard_simplex_naturality (δ 1).op b (standardSimplex.triangle 0 2 3 temp02 temp23)
+        }
+        rewrite[dS1_B_is_b_03]
+        have b_hornincl31_x_is_a_x : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by {
+          intro x
+          rewrite[← congrFun (congrArg NatTrans.app (id hb.symm)) (op [1])]
+          exact rfl
+        }
+        have b_03_is_a_03 : b.app (op [1]) (standardSimplex.edge 3 0 3 (_ : OfNat.ofNat 0 ≤ 3)) = a.app (op [1]) (horn.edge 3 1 0 3 temp03 Finset.card_le_three) := by {
+          rewrite[hornincl_03]
+          exact b_hornincl31_x_is_a_x (horn.edge 3 1 0 3 temp03 Finset.card_le_three)
+        }
+        rewrite[b_03_is_a_03]
+        have a_03_is_dS1_a_face2 : a.app (op [1]) (horn.edge 3 1 0 3 (temp03) (Finset.card_le_three)) = SimplicialObject.δ S 1 (a.app (op [2]) (horn.face 1 2 neq12.symm)) := by{
+          rewrite[hornedge03_is_d1_hornface_2]
+          apply (FunctorToTypes.naturality Λ[3,1] S a (δ 1).op (horn.face 1 2 neq12.symm))
+        }
+        rewrite[a_03_is_dS1_a_face2, temp_a2, delta_is]
+        simp[SimplicialObject.σ]
+        rewrite[composition_applied (S.map (δ 1).op) (S.map (SimplexCategory.σ 0).op)]
+        rewrite[← composition_gg_is_comp _ _]
+        rewrite[composition_functoriality _ _]
+        rewrite[← composition_op _ _]
+        rewrite[δ_comp_σ_succ' _]
+        rewrite[op_id, FunctorToTypes.map_id_apply S f]
+        exact rfl
+        exact rfl
+      · have dS2_B_is_b_02 : SimplicialObject.δ S 2 B = b.app (op [1]) (standardSimplex.edge 3 0 2 (temp02)) := by {
+          rewrite[d2_023_is_02.symm]
+          simp[B]
+          rewrite[delta_is, delta_is]
+          exact standard_simplex_naturality (δ 2).op b (standardSimplex.triangle 0 2 3 temp02 temp23)
+        }
+        rewrite[dS2_B_is_b_02]
+        have b_hornincl31_x_is_a_x : ∀ x, b.app (op [1]) ((hornInclusion 3 1).app (op [1]) x) = a.app (op [1]) x := by {
+          intro x
+          rewrite[← congrFun (congrArg NatTrans.app (id hb.symm)) (op [1])]
+          exact rfl
+        }
+        have b_02_is_a_02 : b.app (op [1]) (standardSimplex.edge 3 0 2 (_ : OfNat.ofNat 0 ≤ 2)) = a.app (op [1]) (horn.edge 3 1 0 2 temp02 Finset.card_le_three) := by {
+          rewrite[hornincl_02]
+          exact b_hornincl31_x_is_a_x (horn.edge 3 1 0 2 temp02 Finset.card_le_three)
+        }
+        rewrite[b_02_is_a_02]
+        have a_02_is_dS1_a_face3 : a.app (op [1]) (horn.edge 3 1 0 2 (temp02) (Finset.card_le_three)) = SimplicialObject.δ S 1 (a.app (op [2]) (horn.face 1 3 neq13.symm)) := by{
+          rewrite[hornedge02_is_d1_hornface_3]
+          apply (FunctorToTypes.naturality Λ[3,1] S a (δ 1).op (horn.face 1 3 neq13.symm))
+        }
+        rw[a_02_is_dS1_a_face3, temp_a3, hleft2]
+        }
 
 -- the other direction
 lemma left_homotopic_of_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g → left_homotopic f g := sorry
