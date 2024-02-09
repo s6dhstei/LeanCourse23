@@ -11,28 +11,22 @@ open SimplexCategory
 open Simplicial
 open Opposite
 
-
-
-/-
-1. We introduce some basic notions for the lower dimensions of a quasi-category:
-* homotopies between "morphisms", i.e. elements of S₁
--/
-
 variable (S : SSet) [Quasicategory S]
 variable (n : Nat)
 variable (f g : S _[1])
-
-
 
 noncomputable section
 set_option maxHeartbeats 2000000
 
 
+/-
+# Homotopies in Quasicategories
+In this file, we define the notion of left homotopy and right homotopy between two arrows in a Quasi-Category, and prove that they are equivalent.
+I only managed to fully prove one implication, namely that left homotopy implies right homotopy. The converse would be very similar; part of the proof is given.
+We define that `f` and `g` are *homotopic* in a Quasi-Category if they are left homotopic or (equivalently) right homotopic.
 
--- # Homotopy
-
-/- For f, g in S₁ with d₀f = d₀g and d₁f = d₁g, we say f and g are left homotopic
-if there exists σ : S₂ such that d₀σ = f, d₁σ = g and d₂σ = s₀d₁f
+For two elements `f, g` in `S _[1]` with same startpoint `(S.δ 1) f = (S.δ 1) g` and  same endpoint  `(S.δ 0) f = (S.δ 0) g`, we say `f` and `g` are *left homotopic* if there exists `σ : S _[2]` such that `(S.δ 0) σ = f`, `(S.δ 1) σ = g` and `(S.δ 2) σ = (S.σ 0) ((S.δ 1) f)`. Figuratively, `g` is a composition of `f` and the identity on the start point.
+The definition of *right homotopic* is similar, but with the identity on the end point.
 -/
 
 structure htpy {S : SSet} [Quasicategory S] (f g : S _[1]) where
@@ -50,15 +44,12 @@ def right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := by{
 }
 
 
-
-
 -- ## left_homotopic and right_homotopic are equivalent
 
 
+-- If f and g are left homotopic, then they are right homotopic.
 
--- if f and g are left homotopic, then they are right homotopic
-
-lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g → right_homotopic f g := by{
+lemma left_homotopic_implies_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : left_homotopic f g → right_homotopic f g := by{
   intro hleft
   rw[left_homotopic] at hleft
   obtain ⟨σ, hσ⟩ := hleft.2
@@ -120,8 +111,7 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
       apply hom_by_faces_13_works_fine_3
       exact compatible_s
     }
-    have weirdrfl : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl
-    obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (Fin.lt_last_iff_coe_castPred.mpr weirdrfl) a
+    obtain ⟨b, hb⟩ := Quasicategory.hornFilling Fin.one_pos (Fin.lt_last_iff_coe_castPred.mpr temp11) a
     let B := b.app (op [2]) (standardSimplex.triangle 0 2 3 (temp02) (temp23))
     use B
     constructor
@@ -210,15 +200,42 @@ lemma left_homotopic_to_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[
         rw[a_02_is_dS1_a_face3, temp_a3, hleft2]
         }
 
--- the other direction
-lemma left_homotopic_of_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g → left_homotopic f g := sorry
+
+-- The other direction: right homotopic implies left homotopic. The calculations are omitted because I don't have enough time left
+
+lemma right_homotopic_implies_left_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g → left_homotopic f g := by{
+  intro hright
+  rw[right_homotopic] at hright
+  obtain ⟨σ, hσ⟩ := hright.2
+  obtain ⟨hright1, hright2, hright3⟩ := hσ
+  constructor
+  · exact hright.1
+  · let s : Fin 4 → (S _[2])
+      | 0 => σ
+      | 1 => (SimplicialObject.σ S 1 g)
+      | 2 => σ
+      | 3 => (SimplicialObject.σ S 0 g)
+    have compatible_s : horn2_compatible (s 0) (s 1) (s 3) := sorry
+    let a : Λ[3,2] ⟶ S := by {
+      use fun m ↦ ((hom_by_faces_2th_3horn (s : Fin 4 → S _[2]) compatible_s).app m)
+      apply (hom_by_faces_2th_3horn (s : Fin 4 → S _[2]) compatible_s).naturality}
+    obtain ⟨b, hb⟩ := Quasicategory.hornFilling (temp0lt2) (sorry) a
+    let B := b.app (op [2]) (standardSimplex.triangle 0 1 3 (Fin.zero_le 1) (temp13))
+    use B
+    sorry
+}
+
+
+-- `f` and `g` are left homotopic if and only if they are right homotopic:
 
 lemma left_homotopic_iff_right_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : right_homotopic f g ↔ left_homotopic f g := by {
   constructor
-  · exact fun a ↦ left_homotopic_of_right_homotopic f g a
-  · exact fun a ↦ left_homotopic_to_right_homotopic f g a
+  · exact fun a ↦ right_homotopic_implies_left_homotopic f g a
+  · exact fun a ↦ left_homotopic_implies_right_homotopic f g a
 }
 
+
+-- Definition of 'homotopic' in Quasicategories:
 
 def qc_homotopic {S : SSet} [Quasicategory S] (f g : S _[1]) : Prop := left_homotopic f g ∨ right_homotopic f g
 

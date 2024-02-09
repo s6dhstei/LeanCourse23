@@ -10,28 +10,30 @@ open Opposite
 
 
 noncomputable section
-set_option maxHeartbeats 0
 
+/-
+In this file, I state technical auxiliary lemmas that are used in the other files.
+Some of them are proved and only outsourced for convenience, others are difficult because of the complicated definitions of StandardSimplex and Horns.
+-/
+
+
+lemma temp11 : @Fin.val (2 + 1) (Fin.castPred 1) = @Fin.val (2 + 2) 1 := by exact rfl
 lemma temp02 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 2 := by exact Fin.zero_le 2
 lemma temp03 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≤ 3 := by exact Fin.zero_le 3
-lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := by
-  norm_num
-  sorry
---  calc 1 = 0 + 1 := sorry
---    _ ≤ 1 + 1 := sorry
---    _ = 2 := sorry
+lemma temp12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 2 := sorry
 lemma temp13 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≤ 3 := sorry
 lemma temp23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≤ 3 := sorry
 
 lemma neq01 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin ≠ 1 := sorry
 lemma neq12 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≠ 2 := sorry
 lemma neq13 {n} : @OfNat.ofNat (Fin (n + 1)) 1 Fin.instOfNatFin ≠ 3 := sorry
+lemma neq20 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≠ 0 := sorry
+lemma neq23 {n} : @OfNat.ofNat (Fin (n + 1)) 2 Fin.instOfNatFin ≠ 3 := sorry
+lemma temp0lt2 {n} : @OfNat.ofNat (Fin (n + 1)) 0 Fin.instOfNatFin < 2 := sorry
 
 -- Note : these should not be so hard, but none of the tactics I know are working
 
-lemma eq_if_op_eq {n m : SimplexCategory} (a b : SimplexCategory.Hom n m) : a = b → op a = op b := by {
-  exact fun a_1 ↦ congrArg op a_1
-}
+lemma eq_if_op_eq {n m : SimplexCategory} (a b : SimplexCategory.Hom n m) : a = b → op a = op b := by exact fun a_1 ↦ congrArg op a_1
 
 lemma id_2_S {S : SSet} : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]) := by
   calc S.map (op (Hom.id [2])) = S.map (op (𝟙 ([2] : SimplexCategory))) := rfl
@@ -39,11 +41,6 @@ lemma id_2_S {S : SSet} : S.map (op (SimplexCategory.Hom.id [2])) = 𝟙 (S _[2]
     _ = 𝟙 (S.obj (op [2] : SimplexCategoryᵒᵖ)) := by exact CategoryTheory.Functor.map_id S (op [2])
     _ = 𝟙 (S _[2]) := rfl
 
-
-
-
-lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategoryᵒᵖ⦄ (f : X ⟶ Y)  (a : Δ[n] ⟶ S) (x : Δ[n].obj X) : S.map f (a.app X x) = a.app Y (Δ[n].map f x) := by exact
-  (FunctorToTypes.naturality Δ[n] S a f x).symm
 
 -- the following are sometimes more precisely what I want than `simp[δ]` or `simp[σ]`
 
@@ -58,6 +55,9 @@ lemma composition_op {n m k : SimplexCategory} (a : n ⟶ m) (b : m ⟶ k) : (a 
 
 
 -- some helpful standardSimplex calculations to use for rewriting:
+
+lemma standard_simplex_naturality {S : SSet} {n : ℕ} ⦃X Y : SimplexCategoryᵒᵖ⦄ (f : X ⟶ Y)  (a : Δ[n] ⟶ S) (x : Δ[n].obj X) : S.map f (a.app X x) = a.app Y (Δ[n].map f x) := by exact
+  (FunctorToTypes.naturality Δ[n] S a f x).symm
 
 lemma d0_123_is_23 : SimplicialObject.δ Δ[3] 0 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 2 3 (temp23) := rfl
 lemma d1_123_is_13 : SimplicialObject.δ Δ[3] 1 (standardSimplex.triangle 1 2 3 (temp12) (temp23)) = standardSimplex.edge 3 1 3 (temp13) := by {
@@ -78,26 +78,11 @@ lemma hornincl_03 : (standardSimplex.edge 3 0 3 (temp03)) = (hornInclusion _ _).
 lemma hornincl_02 : (standardSimplex.edge 3 0 2 (temp02)) = (hornInclusion _ _).app (op [1]) (horn.edge 3 1 0 2 temp02 Finset.card_le_three) := by exact rfl
 
 lemma hornedge23_is_d0_hornface_0 : horn.edge 3 1 2 3 (temp23) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 0 (horn.face 1 0 neq01) := by {
-  let temp1 := (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)).val
-  let temp2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
-  have temp3 : temp1 = temp2 := sorry
+  let val1 := (horn.edge 3 1 2 3 (temp23) (Finset.card_le_three)).val
+  let val2 := (SimplicialObject.δ Λ[3, 1] 0 (horn.face 1 0 (neq01))).val
+  have val_eq : val1 = val2 := sorry
   sorry
 }
-lemma hornedge03_is_d1_hornface_2 : horn.edge 3 1 0 3 (temp03) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 2 neq12.symm) := by {
-  sorry
-}
-lemma hornedge02_is_d1_hornface_3 : horn.edge 3 1 0 2 (temp02) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 3 neq13.symm) := by {
-  sorry
-}
-
--- Note: the problem here is that the definition of horn.edge is complicated
-
-
-
-
-
-/-
-Note about the sorry's in the other files:
-- naturality in the definition of `hom_by_faces_1th_3horn`, `hom_by_faces_2th_3horn` and `hom_by_faces` is missing, because it is hard.
-- in the `hom_by_faces_13_works_fine_i` lemmas, the `ji` for `i = 0, 2, 3` are missing.
--/
+lemma hornedge03_is_d1_hornface_2 : horn.edge 3 1 0 3 (temp03) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 2 neq12.symm) := sorry
+lemma hornedge02_is_d1_hornface_3 : horn.edge 3 1 0 2 (temp02) (Finset.card_le_three) = SimplicialObject.δ Λ[3,1] 1 (horn.face 1 3 neq13.symm) := sorry
+-- Note: the definition of horn.edge is complicated
